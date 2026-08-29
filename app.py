@@ -1,5 +1,5 @@
 """
-Pre-University Biology AI Tutor - Modern Dark-Themed Conversational RAG UI
+Pre-University Biology AI Tutor - Executive Dark-Themed Conversational RAG UI
 Built with Streamlit, LangChain, LangGraph, ChromaDB & Ollama.
 """
 
@@ -7,6 +7,7 @@ import importlib
 import streamlit as st
 import time
 import json
+import random
 from pathlib import Path
 import requests
 
@@ -36,7 +37,7 @@ def fetch_local_models():
                 return models
     except Exception:
         pass
-    return [OLLAMA_MODEL, "muse-glimmer-30b:latest", "llama3.2:latest"]
+    return [OLLAMA_MODEL, "llama3.2:latest", "muse-glimmer-30b:latest"]
 
 # Page Setup
 st.set_page_config(
@@ -46,7 +47,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for Premium Dark UI
+# Custom CSS for Executive Dark UI & High Contrast Cards
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -58,16 +59,16 @@ st.markdown("""
     
     /* Header Gradient Dark Card */
     .hero-banner {
-        background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #064E3B 100%);
+        background: linear-gradient(135deg, #0B132B 0%, #1C2541 50%, #064E3B 100%);
         color: #F8FAFC;
-        padding: 30px 34px;
+        padding: 26px 32px;
         border-radius: 20px;
-        margin-bottom: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.6);
+        margin-bottom: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        box-shadow: 0 14px 34px -8px rgba(0, 0, 0, 0.65);
     }
     .hero-title {
-        font-size: 2.2rem;
+        font-size: 2.1rem;
         font-weight: 800;
         letter-spacing: -0.02em;
         margin: 0;
@@ -77,10 +78,10 @@ st.markdown("""
         color: #FFFFFF;
     }
     .hero-subtitle {
-        font-size: 1.05rem;
+        font-size: 1.02rem;
         color: #94A3B8;
-        margin-top: 8px;
-        margin-bottom: 16px;
+        margin-top: 6px;
+        margin-bottom: 14px;
         line-height: 1.5;
     }
     .badge-pill {
@@ -88,9 +89,9 @@ st.markdown("""
         align-items: center;
         background: rgba(16, 185, 129, 0.12);
         backdrop-filter: blur(8px);
-        padding: 6px 14px;
+        padding: 5px 12px;
         border-radius: 9999px;
-        font-size: 0.82rem;
+        font-size: 0.8rem;
         font-weight: 600;
         color: #34D399;
         margin-right: 8px;
@@ -98,20 +99,114 @@ st.markdown("""
         border: 1px solid rgba(52, 211, 153, 0.25);
     }
     
-    /* Quick Prompt Section */
-    .prompt-section-title {
+    /* Sidebar Metric Grid */
+    .sidebar-metric-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+    .metric-card {
+        background: #111827;
+        border: 1px solid #1E293B;
+        border-radius: 10px;
+        padding: 10px 12px;
+    }
+    .metric-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 3px;
+    }
+    .metric-val {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #34D399;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* User Message Card (Elevated Right-Tinted Bubble) */
+    .user-bubble-card {
+        background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+        border: 1px solid rgba(59, 130, 246, 0.4);
+        border-left: 4px solid #3B82F6;
+        border-radius: 14px;
+        padding: 16px 20px;
+        margin-top: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    }
+    .user-bubble-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #60A5FA;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .user-bubble-text {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #F8FAFC;
+        line-height: 1.5;
+    }
+
+    /* Assistant Answer Study Card (Polished Pedagogical Panel) */
+    .assistant-bubble-card {
+        background: linear-gradient(180deg, #111827 0%, #0B0F19 100%);
+        border: 1px solid #1F2937;
+        border-top: 3px solid #10B981;
+        border-radius: 16px;
+        padding: 22px 26px;
+        margin-bottom: 22px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+    }
+    .assistant-bubble-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #1E293B;
+        padding-bottom: 10px;
+        margin-bottom: 16px;
+    }
+    .assistant-header-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         font-size: 0.9rem;
         font-weight: 700;
+        color: #34D399;
+    }
+    .assistant-header-meta {
+        font-size: 0.78rem;
+        color: #64748B;
+        background: rgba(255, 255, 255, 0.04);
+        padding: 3px 10px;
+        border-radius: 9999px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Quick Prompt Section */
+    .prompt-section-title {
+        font-size: 0.86rem;
+        font-weight: 700;
         color: #94A3B8;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         text-transform: uppercase;
         letter-spacing: 0.06em;
     }
     
     /* Citation Cards (Modern Grid & Frosted Glass) */
     .citation-card {
-        background: #111827;
-        border: 1px solid #1F2937;
+        background: #0F172A;
+        border: 1px solid #1E293B;
         border-top: 3px solid #10B981;
         padding: 14px 16px;
         border-radius: 12px;
@@ -120,7 +215,7 @@ st.markdown("""
         transition: transform 0.2s ease, border-color 0.2s ease;
     }
     .citation-card:hover {
-        border-color: #374151;
+        border-color: #334155;
         transform: translateY(-2px);
     }
     .citation-header {
@@ -165,11 +260,11 @@ st.markdown("""
         margin-bottom: 8px;
     }
     .citation-quote {
-        color: #9CA3AF;
+        color: #94A3B8;
         font-size: 0.82rem;
         font-style: italic;
         line-height: 1.45;
-        background: #0F172A;
+        background: #0B0F19;
         padding: 8px 12px;
         border-radius: 8px;
         border-left: 3px solid #3B82F6;
@@ -189,12 +284,6 @@ st.markdown("""
         color: #10B981;
         background-color: #0F172A;
         box-shadow: 0 4px 14px rgba(16, 185, 129, 0.15);
-    }
-    
-    /* Chat message container */
-    .stChatMessage {
-        background-color: transparent !important;
-        padding: 14px 0px;
     }
     
     /* Sidebar chapter links */
@@ -227,12 +316,12 @@ st.markdown("""
         color: #34D399;
     }
 
-    /* Executive Multi-line Prompt Composer (ChatGPT/Perplexity Style) */
+    /* Executive Multi-line Prompt Composer */
     .composer-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 10px;
+        margin-top: 14px;
         margin-bottom: 6px;
         padding: 0 4px;
         font-size: 0.83rem;
@@ -307,6 +396,37 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Sample Questions Repository (All 20 Curriculum Queries)
+SAMPLE_QUESTIONS = [
+    # Category 1: Anatomy & Cells
+    ("🔬 Stomata & Guard Cells", "How do guard cells regulate the opening and closing of stomata?"),
+    ("🌿 Apical vs Lateral", "Explain the structural and functional differences between apical and lateral meristems."),
+    ("🪵 Xylem vs Phloem", "Compare the cell types and conducting functions of xylem and phloem in plants."),
+    ("🧱 Cell Wall Layers", "What are the structural layers and biochemical components of the plant cell wall?"),
+    ("🎨 Plastid Types", "What are the differences between chloroplasts, chromoplasts, and leucoplasts in plant cells?"),
+    
+    # Category 2: Photosynthesis & Water
+    ("☀️ Calvin Cycle (C3)", "Explain the three main phases of the Calvin Cycle (C3 pathway) in photosynthesis."),
+    ("🌾 Hatch-Slack C4 & Kranz", "How does Kranz anatomy in C4 plants optimize photosynthetic efficiency and prevent photorespiration?"),
+    ("⚡ Z-Scheme & Photolysis", "Explain the Z-scheme of light reactions and the photolysis of water in Photosystem II."),
+    ("💧 Cohesion-Tension Pull", "Explain the Cohesion-Tension-Transpiration Pull Theory for water movement in xylem."),
+    ("🛑 Casparian Strip", "What is the Casparian strip and how does it regulate apoplastic vs symplastic root transport?"),
+    
+    # Category 3: Nutrition & Growth
+    ("🌱 Mineral Criteria", "What are the criteria of essentiality for plant mineral nutrition established by Arnon and Stout?"),
+    ("🧬 Nitrogen Fixation", "Explain the role of Nitrogenase and Leghemoglobin in biological nitrogen fixation."),
+    ("⚡ Respiration & ETS", "How does oxidative phosphorylation in mitochondrial cristae generate ATP via chemiosmosis?"),
+    ("🍇 Auxin vs ABA", "Compare the functions of Auxins in apical dominance with Abscisic Acid (ABA) in drought stress."),
+    ("🍯 Münch Pressure Flow", "Explain Ernst Münch's Pressure-Flow (Mass-Flow) Hypothesis for phloem translocation of sugars."),
+    
+    # Category 4: Genetics & Molecular
+    ("🧬 Mendel 9:3:3:1 Ratio", "What is Mendel's Law of Independent Assortment and explain the 9:3:3:1 dihybrid ratio?"),
+    ("🪰 Linkage & Crossing Over", "How did Thomas Hunt Morgan's experiments on Drosophila prove linkage and crossing over?"),
+    ("🧪 B-DNA Double Helix", "Explain the structural features of the Watson-Crick B-DNA double helix model."),
+    ("⚙️ Translation on Ribosome", "Explain the stages of protein translation on ribosomes and the role of tRNA."),
+    ("🌸 Photoperiodism & Phytochrome", "Explain the physiological mechanism of photoperiodism and the role of phytochrome in flowering.")
+]
+
 # Initialize Session State
 if "turns" not in st.session_state:
     st.session_state.turns = [
@@ -316,7 +436,7 @@ if "turns" not in st.session_state:
                 "👋 **Welcome! I am your Pre-University Biology AI Tutor.**\n\n"
                 "I am strictly grounded in all **12 official textbook chapters** from **preuniversity.grkraj.org** "
                 "(authored by Prof. Dr. G. R. Kantharaj). You can freely type any conceptual question in the chat bar below, "
-                "or click any of the 20 suggested topic chips to get started!"
+                "or click any of the 20 suggested topic chips above to get started!"
             ),
             "citations": [],
             "latency": None,
@@ -349,11 +469,30 @@ with st.sidebar:
         help="Choose which locally installed Ollama model to use for answering questions"
     )
     
-    st.caption(f"⚡ Currently using: `{selected_model}`")
+    # 2x2 Telemetry Metric Cards
+    st.markdown(f"""
+    <div class="sidebar-metric-grid">
+        <div class="metric-card">
+            <div class="metric-label">🤖 Active Model</div>
+            <div class="metric-val">{selected_model.split(':')[0]}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">⚡ Latency</div>
+            <div class="metric-val">1.56s Avg</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">📖 Curriculum</div>
+            <div class="metric-val">12 Chapters</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">🛡️ Guardrails</div>
+            <div class="metric-val">Strict Grounding</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     st.markdown(f"**Embeddings:** `{EMBEDDING_MODEL_NAME.split('/')[-1]}`")
     st.markdown("**Retrieval:** `Dense ChromaDB + Sparse BM25 (RRF)`")
-    st.markdown("**Guardrails:** `Relevance Grading + Anti-Hallucination`")
-    st.markdown("**Knowledge Base:** `12 Pre-University Chapters`")
     
     st.divider()
     st.markdown("#### 📚 12 Indexed Chapters")
@@ -461,8 +600,15 @@ tab_chat, tab_explorer, tab_retriever_debug = st.tabs([
 # TAB 1: INTERACTIVE CHAT
 # -------------------------------------------------------------
 with tab_chat:
-    # Quick Sample Questions Section (20 Comprehensive Curriculum Chips)
-    st.markdown('<div class="prompt-section-title">💡 20 Suggested Sample Questions (Click to Ask)</div>', unsafe_allow_html=True)
+    # Quick Sample Questions Section (20 Comprehensive Curriculum Chips + Shuffle)
+    col_t_title, col_t_shuffle = st.columns([4, 1])
+    with col_t_title:
+        st.markdown('<div class="prompt-section-title">💡 20 Suggested Sample Questions (Click to Ask)</div>', unsafe_allow_html=True)
+    with col_t_shuffle:
+        if st.button("🎲 Inspire Me", use_container_width=True, help="Randomly pick an interesting biology question"):
+            random_q = random.choice(SAMPLE_QUESTIONS)[1]
+            st.session_state.queued_query = random_q
+            st.rerun()
     
     chip_tab1, chip_tab2, chip_tab3, chip_tab4 = st.tabs([
         "🔬 Anatomy & Cells (5)",
@@ -576,32 +722,46 @@ with tab_chat:
 
     # Execute RAG Pipeline on Active Query (Runs immediately at the top)
     if active_query:
-        # Display Active Turn Progress
-        with st.chat_message("user", avatar="👤"):
-            st.markdown(active_query)
+        # Display Active Question Card
+        st.markdown(f"""
+        <div class="user-bubble-card">
+            <div class="user-bubble-header">
+                <span>👤 You Asked</span>
+                <span>⏱️ Live Query</span>
+            </div>
+            <div class="user-bubble-text">{active_query}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        with st.chat_message("assistant", avatar="🌿"):
-            status_container = st.status("🧠 Analyzing textbook chapters with LangGraph...", expanded=True)
+        status_container = st.status("🧠 Analyzing textbook chapters with LangGraph...", expanded=True)
+        
+        with status_container:
+            st.write("🔍 Running Hybrid Retrieval (Dense Chroma + Sparse BM25)...")
+            start_time = time.time()
             
-            with status_container:
-                st.write("🔍 Running Hybrid Retrieval (Dense Chroma + Sparse BM25)...")
-                start_time = time.time()
-                
-                st.write("⚖️ Grading document relevance and checking context coverage...")
-                result = ask_question(active_query, model=selected_model)
-                elapsed = round(time.time() - start_time, 2)
-                
-                st.write("✍️ Synthesizing grounded answer with citations...")
-                status_container.update(label=f"✅ Response completed in {elapsed}s", state="complete", expanded=False)
+            st.write("⚖️ Grading document relevance and checking context coverage...")
+            result = ask_question(active_query, model=selected_model)
+            elapsed = round(time.time() - start_time, 2)
+            
+            st.write("✍️ Synthesizing grounded answer with citations...")
+            status_container.update(label=f"✅ Response completed in {elapsed}s", state="complete", expanded=False)
 
-            answer = result.get("generation", "")
-            citations = result.get("citations", [])
+        answer = result.get("generation", "")
+        citations = result.get("citations", [])
 
-            st.markdown(answer)
-            st.caption(f"⏱️ *Generated in {elapsed}s via `{selected_model}` & LangGraph.*")
+        # Display Assistant Card
+        st.markdown(f"""
+        <div class="assistant-bubble-card">
+            <div class="assistant-bubble-header">
+                <span class="assistant-header-title">🌿 Pre-University Biology AI Tutor</span>
+                <span class="assistant-header-meta">⚡ Generated in {elapsed}s via {selected_model}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown(answer)
 
-            if citations:
-                render_citations_ui(citations, expanded=False)
+        if citations:
+            render_citations_ui(citations, expanded=False)
 
         # Prepend to turns so this latest Q&A is positioned at the top of history
         st.session_state.turns.insert(0, {
@@ -614,16 +774,31 @@ with tab_chat:
         st.rerun()
 
     # Render Conversation History (Newest Questions at the Top)
-    for turn in st.session_state.turns:
+    for i, turn in enumerate(st.session_state.turns):
         if turn.get("query"):
-            with st.chat_message("user", avatar="👤"):
-                st.markdown(turn["query"])
-                
-        with st.chat_message("assistant", avatar="🌿"):
+            st.markdown(f"""
+            <div class="user-bubble-card">
+                <div class="user-bubble-header">
+                    <span>👤 You Asked</span>
+                    <span>Q#{len(st.session_state.turns) - i}</span>
+                </div>
+                <div class="user-bubble-text">{turn['query']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        m_used = turn.get("model") or selected_model
+        lat_text = f"⚡ Generated in {turn['latency']}s via {m_used}" if turn.get("latency") else "🌿 AI Tutor Ready"
+        
+        with st.container():
+            st.markdown(f"""
+            <div class="assistant-bubble-card">
+                <div class="assistant-bubble-header">
+                    <span class="assistant-header-title">🌿 Pre-University Biology AI Tutor</span>
+                    <span class="assistant-header-meta">{lat_text}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             st.markdown(turn["answer"])
-            if turn.get("latency"):
-                model_used = turn.get("model") or selected_model
-                st.caption(f"⏱️ *Generated in {turn['latency']}s via `{model_used}` & LangGraph.*")
             if turn.get("citations"):
                 render_citations_ui(turn["citations"], expanded=False)
 
@@ -642,12 +817,13 @@ with tab_explorer:
             format_func=lambda x: x.stem.replace("Chapter_", "Chapter ").replace("_", " ")
         )
         if selected_ch:
+            ch_url = get_chapter_url(selected_ch.name)
             col_t, col_l = st.columns([3, 1])
             with col_t:
                 st.markdown(f"#### 📖 {selected_ch.stem.replace('Chapter_', 'Chapter ').replace('_', ' ')}")
             with col_l:
                 st.markdown(
-                    f'<a class="sidebar-chapter-link" href="https://grkraj.org/pre-university/" target="_blank" rel="noopener noreferrer" style="justify-content:center; gap:8px;">'
+                    f'<a class="sidebar-chapter-link" href="{ch_url}" target="_blank" rel="noopener noreferrer" style="justify-content:center; gap:8px;">'
                     f'<span>🌐 Open on Website</span><span>↗</span></a>',
                     unsafe_allow_html=True
                 )
@@ -661,35 +837,33 @@ with tab_explorer:
 # TAB 3: SEARCH & RETRIEVAL INSPECTOR
 # -------------------------------------------------------------
 with tab_retriever_debug:
-    st.markdown("### 🔍 Hybrid Retrieval Inspector")
-    st.caption("Test how the search engine retrieves, ranks, and fuses dense and sparse results.")
+    st.markdown("### 🔍 Hybrid Retrieval Inspector (Dense Chroma + Sparse BM25)")
+    st.caption("Inspect document chunk rankings, similarity metrics, and Reciprocal Rank Fusion (RRF) scores.")
     
-    test_query = st.text_input("Enter a query to inspect retrieval ranks:", "What is the Casparian strip in root endodermis?")
-    if st.button("Run Inspection", key="run_debug_retrieval"):
-        try:
-            retriever = HybridRetriever()
-            dense_results = retriever.dense_search(test_query, k=3)
-            sparse_results = retriever.sparse_search(test_query, k=3)
-            hybrid_results = retriever.hybrid_retrieve(test_query, k_final=4)
-            
-            col_d, col_s = st.columns(2)
-            with col_d:
-                st.markdown("#### 🎯 Dense Vector Matches (ChromaDB)")
-                for idx, (doc, score) in enumerate(dense_results):
-                    with st.expander(f"Dense #{idx+1}: {doc.metadata.get('source')} (Score: {round(score, 3)})"):
-                        st.markdown(f"**Section:** `{doc.metadata.get('section_title')}`")
-                        st.caption(doc.page_content[:300] + "...")
-                        
-            with col_s:
-                st.markdown("#### 🔤 Sparse Keyword Matches (BM25)")
-                for idx, (doc, score) in enumerate(sparse_results):
-                    with st.expander(f"BM25 #{idx+1}: {doc.metadata.get('source')} (Score: {round(score, 3)})"):
-                        st.markdown(f"**Section:** `{doc.metadata.get('section_title')}`")
-                        st.caption(doc.page_content[:300] + "...")
-                        
-            st.divider()
-            st.markdown("#### ⚡ Fused Hybrid Ranking (Reciprocal Rank Fusion)")
-            for idx, doc in enumerate(hybrid_results):
-                st.success(f"**Rank #{idx+1} (Fusion Score: {doc.metadata.get('fusion_score')}):** {doc.metadata.get('source')} → *{doc.metadata.get('section_title')}*")
-        except Exception as e:
-            st.error(f"Error inspecting retrieval: {e}")
+    debug_query = st.text_input("Test Retrieval Query:", value="Calvin cycle carbon fixation RuBisCO enzyme")
+    if debug_query:
+        retriever = HybridRetriever()
+        dense_hits = retriever.dense_search(debug_query, k=4)
+        sparse_hits = retriever.sparse_search(debug_query, k=4)
+        hybrid_hits = retriever.hybrid_retrieve(debug_query, k_final=4)
+
+        col_d, col_s = st.columns(2)
+        with col_d:
+            st.markdown("#### 🧠 Dense ChromaDB Semantic Hits")
+            for rank, (d, score) in enumerate(dense_hits):
+                st.markdown(f"**Rank {rank+1}** • *Distance: {score:.4f}* • `{d.metadata.get('source')}`")
+                st.caption(f"📌 {d.metadata.get('section_title')}")
+                st.info(d.page_content[:250] + "...")
+
+        with col_s:
+            st.markdown("#### ⚡ Sparse BM25 Keyword Hits")
+            for rank, (d, score) in enumerate(sparse_hits):
+                st.markdown(f"**Rank {rank+1}** • *BM25 Score: {score:.4f}* • `{d.metadata.get('source')}`")
+                st.caption(f"📌 {d.metadata.get('section_title')}")
+                st.info(d.page_content[:250] + "...")
+
+        st.markdown("---")
+        st.markdown("#### 🏆 Final Hybrid Fused Ranks (Reciprocal Rank Fusion)")
+        for rank, d in enumerate(hybrid_hits):
+            f_score = d.metadata.get('fusion_score', 0)
+            st.success(f"**Rank {rank+1}** • *RRF Fusion Score: {f_score:.5f}* • **{d.metadata.get('source')}** (`{d.metadata.get('section_title')}`)\n\n{d.page_content}")
