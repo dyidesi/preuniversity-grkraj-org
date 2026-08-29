@@ -12,9 +12,9 @@ CHROMA_DIR.mkdir(parents=True, exist_ok=True)
 EVAL_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # LLM & Embedding Settings
-# Set to Muse Glimmer as requested
+# Set to Llama 3.2 as default model
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "muse-glimmer-30b:latest")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:latest")
 EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2")
 
 # Chunking Configuration
