@@ -369,44 +369,107 @@ tab_chat, tab_explorer, tab_retriever_debug = st.tabs([
 # TAB 1: INTERACTIVE CHAT
 # -------------------------------------------------------------
 with tab_chat:
-    # Quick Sample Questions Section
-    st.markdown('<div class="prompt-section-title">💡 Quick Suggested Questions Across Curriculum</div>', unsafe_allow_html=True)
+    # Quick Sample Questions Section (20 Comprehensive Curriculum Chips)
+    st.markdown('<div class="prompt-section-title">💡 20 Suggested Sample Questions (Click to Ask)</div>', unsafe_allow_html=True)
     
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        if st.button("🔬 Stomata & Guard Cells", use_container_width=True, help="Plant Anatomy"):
-            st.session_state.queued_query = "How do guard cells regulate the opening and closing of stomata?"
-            st.rerun()
-    with col2:
-        if st.button("☀️ Calvin Cycle (C3)", use_container_width=True, help="Photosynthesis"):
-            st.session_state.queued_query = "Explain the three main phases of the Calvin Cycle (C3 pathway) in photosynthesis."
-            st.rerun()
-    with col3:
-        if st.button("💧 Cohesion-Tension Pull", use_container_width=True, help="Water Relations"):
-            st.session_state.queued_query = "Explain the Cohesion-Tension-Transpiration Pull Theory for water movement in xylem."
-            st.rerun()
-    with col4:
-        if st.button("🧬 Mendel's 9:3:3:1 Ratio", use_container_width=True, help="Genetics"):
-            st.session_state.queued_query = "What is Mendel's Law of Independent Assortment and explain the 9:3:3:1 dihybrid ratio?"
-            st.rerun()
+    chip_tab1, chip_tab2, chip_tab3, chip_tab4 = st.tabs([
+        "🔬 Anatomy & Cells (5)",
+        "☀️ Photosynthesis & Water (5)",
+        "🌱 Nutrition & Growth (5)",
+        "🧬 Genetics & Molecular (5)"
+    ])
+    
+    with chip_tab1:
+        c1, c2, c3, c4, c5 = st.columns(5)
+        with c1:
+            if st.button("🔬 Stomata & Guard Cells", use_container_width=True, help="Chapter 1: Plant Anatomy"):
+                st.session_state.queued_query = "How do guard cells regulate the opening and closing of stomata?"
+                st.rerun()
+        with c2:
+            if st.button("🌿 Apical vs Lateral", use_container_width=True, help="Chapter 1: Meristems"):
+                st.session_state.queued_query = "Explain the structural and functional differences between apical and lateral meristems."
+                st.rerun()
+        with c3:
+            if st.button("🪵 Xylem vs Phloem", use_container_width=True, help="Chapter 1: Complex Tissues"):
+                st.session_state.queued_query = "Compare the cell types and conducting functions of xylem and phloem in plants."
+                st.rerun()
+        with c4:
+            if st.button("🧱 Cell Wall Layers", use_container_width=True, help="Chapter 2: Cell Structure"):
+                st.session_state.queued_query = "What are the structural layers and biochemical components of the plant cell wall?"
+                st.rerun()
+        with c5:
+            if st.button("🎨 Plastid Types", use_container_width=True, help="Chapter 2: Organelles"):
+                st.session_state.queued_query = "What are the differences between chloroplasts, chromoplasts, and leucoplasts in plant cells?"
+                st.rerun()
 
-    col5, col6, col7, col8 = st.columns(4)
-    with col5:
-        if st.button("🌱 Mineral Criteria (Arnon)", use_container_width=True, help="Mineral Nutrition"):
-            st.session_state.queued_query = "What are the criteria of essentiality for plant mineral nutrition established by Arnon and Stout?"
-            st.rerun()
-    with col6:
-        if st.button("⚡ Respiration & ETS", use_container_width=True, help="Bioenergetics"):
-            st.session_state.queued_query = "How does oxidative phosphorylation in mitochondrial cristae generate ATP via chemiosmosis?"
-            st.rerun()
-    with col7:
-        if st.button("🍇 Phytohormones (Auxin/ABA)", use_container_width=True, help="Plant Growth"):
-            st.session_state.queued_query = "Compare the functions of Auxins in apical dominance with Abscisic Acid (ABA) in drought stress."
-            st.rerun()
-    with col8:
-        if st.button("🧪 DNA Double Helix (Watson-Crick)", use_container_width=True, help="Molecular Genetics"):
-            st.session_state.queued_query = "Explain the structural features of the Watson-Crick B-DNA double helix model."
-            st.rerun()
+    with chip_tab2:
+        c6, c7, c8, c9, c10 = st.columns(5)
+        with c6:
+            if st.button("☀️ Calvin Cycle (C3)", use_container_width=True, help="Chapter 3: Photosynthesis"):
+                st.session_state.queued_query = "Explain the three main phases of the Calvin Cycle (C3 pathway) in photosynthesis."
+                st.rerun()
+        with c7:
+            if st.button("🌾 Hatch-Slack C4 & Kranz", use_container_width=True, help="Chapter 3: C4 Pathway"):
+                st.session_state.queued_query = "How does Kranz anatomy in C4 plants optimize photosynthetic efficiency and prevent photorespiration?"
+                st.rerun()
+        with c8:
+            if st.button("⚡ Z-Scheme & Photolysis", use_container_width=True, help="Chapter 3: Light Reactions"):
+                st.session_state.queued_query = "Explain the Z-scheme of light reactions and the photolysis of water in Photosystem II."
+                st.rerun()
+        with c9:
+            if st.button("💧 Cohesion-Tension Pull", use_container_width=True, help="Chapter 4: Water Relations"):
+                st.session_state.queued_query = "Explain the Cohesion-Tension-Transpiration Pull Theory for water movement in xylem."
+                st.rerun()
+        with c10:
+            if st.button("🛑 Casparian Strip", use_container_width=True, help="Chapter 4: Root Transport"):
+                st.session_state.queued_query = "What is the Casparian strip and how does it regulate apoplastic vs symplastic root transport?"
+                st.rerun()
+
+    with chip_tab3:
+        c11, c12, c13, c14, c15 = st.columns(5)
+        with c11:
+            if st.button("🌱 Mineral Criteria", use_container_width=True, help="Chapter 5: Mineral Nutrition"):
+                st.session_state.queued_query = "What are the criteria of essentiality for plant mineral nutrition established by Arnon and Stout?"
+                st.rerun()
+        with c12:
+            if st.button("🧬 Nitrogen Fixation", use_container_width=True, help="Chapter 5: Nitrogen Metabolism"):
+                st.session_state.queued_query = "Explain the role of Nitrogenase and Leghemoglobin in biological nitrogen fixation."
+                st.rerun()
+        with c13:
+            if st.button("⚡ Respiration & ETS", use_container_width=True, help="Chapter 6: Bioenergetics"):
+                st.session_state.queued_query = "How does oxidative phosphorylation in mitochondrial cristae generate ATP via chemiosmosis?"
+                st.rerun()
+        with c14:
+            if st.button("🍇 Auxin vs ABA", use_container_width=True, help="Chapter 7: Phytohormones"):
+                st.session_state.queued_query = "Compare the functions of Auxins in apical dominance with Abscisic Acid (ABA) in drought stress."
+                st.rerun()
+        with c15:
+            if st.button("🍯 Münch Pressure Flow", use_container_width=True, help="Chapter 8: Phloem Translocation"):
+                st.session_state.queued_query = "Explain Ernst Münch's Pressure-Flow (Mass-Flow) Hypothesis for phloem translocation of sugars."
+                st.rerun()
+
+    with chip_tab4:
+        c16, c17, c18, c19, c20 = st.columns(5)
+        with c16:
+            if st.button("🧬 Mendel 9:3:3:1 Ratio", use_container_width=True, help="Chapter 9: Mendelism"):
+                st.session_state.queued_query = "What is Mendel's Law of Independent Assortment and explain the 9:3:3:1 dihybrid ratio?"
+                st.rerun()
+        with c17:
+            if st.button("🪰 Linkage & Crossing Over", use_container_width=True, help="Chapter 10: Chromosomes"):
+                st.session_state.queued_query = "How did Thomas Hunt Morgan's experiments on Drosophila prove linkage and crossing over?"
+                st.rerun()
+        with c18:
+            if st.button("🧪 B-DNA Double Helix", use_container_width=True, help="Chapter 11: Molecular Genetics"):
+                st.session_state.queued_query = "Explain the structural features of the Watson-Crick B-DNA double helix model."
+                st.rerun()
+        with c19:
+            if st.button("⚙️ Translation on Ribosome", use_container_width=True, help="Chapter 12: Gene Expression"):
+                st.session_state.queued_query = "Explain the stages of protein translation on ribosomes and the role of tRNA."
+                st.rerun()
+        with c20:
+            if st.button("🌸 Photoperiodism & Phytochrome", use_container_width=True, help="Chapter 7: Flowering"):
+                st.session_state.queued_query = "Explain the physiological mechanism of photoperiodism and the role of phytochrome in flowering."
+                st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
 
