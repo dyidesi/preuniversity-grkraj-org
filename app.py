@@ -10,9 +10,18 @@ import json
 from pathlib import Path
 import requests
 
+import src.config
+importlib.reload(src.config)
 import src.agent_graph
 importlib.reload(src.agent_graph)
-from src.config import CORPUS_DIR, OLLAMA_MODEL, EMBEDDING_MODEL_NAME, OLLAMA_BASE_URL, get_chapter_url
+
+from src.config import CORPUS_DIR, OLLAMA_MODEL, EMBEDDING_MODEL_NAME, OLLAMA_BASE_URL
+try:
+    from src.config import get_chapter_url
+except ImportError:
+    def get_chapter_url(source_name: str) -> str:
+        return "https://grkraj.org/pre-university"
+
 from src.agent_graph import ask_question, reset_retriever
 from src.ingestion import run_ingestion
 from src.hybrid_retriever import HybridRetriever

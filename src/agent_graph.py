@@ -10,7 +10,13 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_ollama import ChatOllama
 from langgraph.graph import StateGraph, END
 
-from src.config import OLLAMA_BASE_URL, OLLAMA_MODEL, get_chapter_url
+try:
+    from src.config import OLLAMA_BASE_URL, OLLAMA_MODEL, get_chapter_url
+except ImportError:
+    from src.config import OLLAMA_BASE_URL, OLLAMA_MODEL
+    def get_chapter_url(source_name: str) -> str:
+        return "https://grkraj.org/pre-university"
+
 from src.hybrid_retriever import HybridRetriever
 
 import requests
