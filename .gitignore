@@ -1,0 +1,27 @@
+# Virtual Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Streamlit Cache
+.streamlit/secrets.toml
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Vector Storage (Generated at runtime by ingestion script)
+chromadb_storage/
+
+# Evaluation Scratch
+*.log
