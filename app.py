@@ -236,18 +236,19 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Initialize Session State
-if "messages" not in st.session_state:
-    st.session_state.messages = [
+if "turns" not in st.session_state:
+    st.session_state.turns = [
         {
-            "role": "assistant",
-            "content": (
+            "query": None,
+            "answer": (
                 "👋 **Welcome! I am your Pre-University Biology AI Tutor.**\n\n"
                 "I am strictly grounded in all **12 official textbook chapters** from **preuniversity.grkraj.org** "
                 "(authored by Prof. Dr. G. R. Kantharaj). You can freely type any conceptual question in the chat bar below, "
-                "or click any of the suggested topic chips to get started!"
+                "or click any of the 20 suggested topic chips to get started!"
             ),
             "citations": [],
-            "latency": None
+            "latency": None,
+            "model": None
         }
     ]
 
@@ -306,19 +307,20 @@ with st.sidebar:
                 st.rerun()
     with col_clear:
         if st.button("🗑️ Clear Chat", use_container_width=True, help="Reset conversation history"):
-            st.session_state.messages = [
+            st.session_state.turns = [
                 {
-                    "role": "assistant",
-                    "content": "Conversation cleared. How can I assist you with your pre-university biology studies?",
+                    "query": None,
+                    "answer": "Conversation cleared. How can I assist you with your pre-university biology studies?",
                     "citations": [],
-                    "latency": None
+                    "latency": None,
+                    "model": None
                 }
             ]
             st.rerun()
 
     # Chat Export Option
-    if len(st.session_state.messages) > 1:
-        chat_export_json = json.dumps(st.session_state.messages, indent=2)
+    if len(st.session_state.turns) > 1 or (len(st.session_state.turns) == 1 and st.session_state.turns[0].get("query")):
+        chat_export_json = json.dumps(st.session_state.turns, indent=2)
         st.download_button(
             label="📥 Export Chat History",
             data=chat_export_json,
@@ -491,22 +493,6 @@ with tab_chat:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Render Conversation History
-    for message in st.session_state.messages:
-        role = message["role"]
-        avatar = "👤" if role == "user" else "🌿"
-        
-        with st.chat_message(role, avatar=avatar):
-            st.markdown(message["content"])
-            
-            # Show latency badge if available
-            if message.get("latency"):
-                st.caption(f"⏱️ *Generated in {message['latency']}s via local LangGraph pipeline.*")
-                
-            # Render Clean Professional Citations
-            if message.get("citations"):
-                render_citations_ui(message["citations"], expanded=False)
-
     # Top-Level Chat Input (Always Active & Ready to Type)
     user_typed_input = st.chat_input("Type any biology question here (e.g., 'What is the role of the Casparian strip?')...")
 
@@ -518,14 +504,12 @@ with tab_chat:
         active_query = st.session_state.queued_query
         st.session_state.queued_query = None
 
-    # Execute RAG Pipeline on Query
+    # Execute RAG Pipeline on Active Query (Runs immediately at the top)
     if active_query:
-        # Display User Question
-        st.session_state.messages.append({"role": "user", "content": active_query, "citations": [], "latency": None})
+        # Display Active Turn Progress
         with st.chat_message("user", avatar="👤"):
             st.markdown(active_query)
 
-        # Generate Assistant Response
         with st.chat_message("assistant", avatar="🌿"):
             status_container = st.status("🧠 Analyzing textbook chapters with LangGraph...", expanded=True)
             
@@ -546,17 +530,32 @@ with tab_chat:
             st.markdown(answer)
             st.caption(f"⏱️ *Generated in {elapsed}s via `{selected_model}` & LangGraph.*")
 
-            # Render Clean Professional Citations (Closed by default)
             if citations:
                 render_citations_ui(citations, expanded=False)
 
-            # Save in history
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": answer,
-                "citations": citations,
-                "latency": elapsed
-            })
+        # Prepend to turns so this latest Q&A is positioned at the top of history
+        st.session_state.turns.insert(0, {
+            "query": active_query,
+            "answer": answer,
+            "citations": citations,
+            "latency": elapsed,
+            "model": selected_model
+        })
+        st.rerun()
+
+    # Render Conversation History (Newest Questions at the Top)
+    for turn in st.session_state.turns:
+        if turn.get("query"):
+            with st.chat_message("user", avatar="👤"):
+                st.markdown(turn["query"])
+                
+        with st.chat_message("assistant", avatar="🌿"):
+            st.markdown(turn["answer"])
+            if turn.get("latency"):
+                model_used = turn.get("model") or selected_model
+                st.caption(f"⏱️ *Generated in {turn['latency']}s via `{model_used}` & LangGraph.*")
+            if turn.get("citations"):
+                render_citations_ui(turn["citations"], expanded=False)
 
 # -------------------------------------------------------------
 # TAB 2: 12 CHAPTERS EXPLORER
