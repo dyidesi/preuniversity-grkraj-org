@@ -126,33 +126,37 @@ st.markdown("""
     .citation-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
         margin-bottom: 8px;
     }
-    .citation-badge {
-        font-size: 0.82rem;
+    .citation-badge-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.83rem;
         font-weight: 700;
-        color: #34D399;
-        background: rgba(16, 185, 129, 0.12);
-        padding: 3px 10px;
-        border-radius: 6px;
-        border: 1px solid rgba(52, 211, 153, 0.2);
-    }
-    .citation-link {
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: #94A3B8 !important;
+        color: #34D399 !important;
         text-decoration: none !important;
-        background: rgba(255, 255, 255, 0.05);
-        padding: 2px 8px;
+        background: rgba(16, 185, 129, 0.12);
+        padding: 4px 12px;
         border-radius: 6px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(52, 211, 153, 0.25);
         transition: all 0.2s ease;
     }
-    .citation-link:hover {
-        color: #10B981 !important;
+    .citation-badge-link:hover {
+        background: rgba(16, 185, 129, 0.24);
         border-color: #10B981;
-        background: rgba(16, 185, 129, 0.1);
+        color: #6EE7B7 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.18);
+    }
+    .citation-badge-link .icon-arrow {
+        font-size: 0.76rem;
+        opacity: 0.8;
+        transition: transform 0.2s ease;
+    }
+    .citation-badge-link:hover .icon-arrow {
+        transform: translate(2px, -2px);
+        opacity: 1;
     }
     .citation-section {
         font-size: 0.82rem;
@@ -343,8 +347,10 @@ def render_citations_ui(citations: list, expanded: bool = False):
                 card_html = f"""
                 <div class="citation-card">
                     <div class="citation-header">
-                        <span class="citation-badge">[{i+1}] {source_title}</span>
-                        <a class="citation-link" href="{url}" target="_blank" rel="noopener noreferrer">↗ Website</a>
+                        <a class="citation-badge-link" href="{url}" target="_blank" rel="noopener noreferrer" title="Click to view chapter lecture notes on grkraj.org">
+                            <span>[{i+1}] {source_title}</span>
+                            <span class="icon-arrow">↗</span>
+                        </a>
                     </div>
                     <div class="citation-section">📌 <i>Section: {section_title}</i></div>
                     <div class="citation-quote">"{snippet}"</div>
