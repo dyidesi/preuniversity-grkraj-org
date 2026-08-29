@@ -227,6 +227,78 @@ st.markdown("""
         color: #34D399;
     }
 
+    /* Executive Multi-line Prompt Composer (ChatGPT/Perplexity Style) */
+    .composer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        margin-bottom: 6px;
+        padding: 0 4px;
+        font-size: 0.83rem;
+        font-weight: 700;
+        color: #94A3B8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .composer-hint {
+        font-size: 0.77rem;
+        font-weight: 500;
+        color: #64748B;
+        text-transform: none;
+        letter-spacing: normal;
+    }
+
+    div[data-testid="stChatInput"] {
+        background-color: transparent !important;
+        padding-top: 4px !important;
+        padding-bottom: 20px !important;
+    }
+    div[data-testid="stChatInput"] > div {
+        background: linear-gradient(180deg, #131D31 0%, #0F172A 100%) !important;
+        border: 1.5px solid #334155 !important;
+        border-radius: 16px !important;
+        padding: 10px 14px !important;
+        box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+        transition: all 0.25s ease-in-out !important;
+    }
+    div[data-testid="stChatInput"] > div:focus-within {
+        border-color: #10B981 !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25), 0 12px 30px -4px rgba(0, 0, 0, 0.7) !important;
+        background: linear-gradient(180deg, #16243D 0%, #0F172A 100%) !important;
+    }
+    div[data-testid="stChatInput"] textarea {
+        min-height: 85px !important;
+        font-size: 0.96rem !important;
+        line-height: 1.55 !important;
+        color: #F8FAFC !important;
+        background: transparent !important;
+        padding: 6px 4px !important;
+    }
+    div[data-testid="stChatInput"] textarea::placeholder {
+        color: #94A3B8 !important;
+        font-size: 0.94rem !important;
+    }
+    div[data-testid="stChatInput"] button {
+        background: #10B981 !important;
+        color: #064E3B !important;
+        border-radius: 10px !important;
+        border: none !important;
+        padding: 8px 12px !important;
+        align-self: flex-end !important;
+        margin-bottom: 4px !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+    }
+    div[data-testid="stChatInput"] button:hover {
+        background: #34D399 !important;
+        transform: scale(1.05) !important;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45) !important;
+    }
+    div[data-testid="stChatInput"] button svg {
+        fill: #064E3B !important;
+    }
+
     /* Sidebar styling */
     section[data-testid="stSidebar"] {
         background-color: #0A0F1D;
@@ -491,9 +563,7 @@ with tab_chat:
                 st.session_state.queued_query = "Explain the physiological mechanism of photoperiodism and the role of phytochrome in flowering."
                 st.rerun()
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Top-Level Chat Input (Always Active & Ready to Type)
+    st.markdown('<div class="composer-header"><span>💬 Ask Your Question</span><span class="composer-hint">Shift + Enter for multi-line queries • Enter to send</span></div>', unsafe_allow_html=True)
     user_typed_input = st.chat_input("Type any biology question here (e.g., 'What is the role of the Casparian strip?')...")
 
     # Determine query to process (either typed by user or clicked from quick prompts)
