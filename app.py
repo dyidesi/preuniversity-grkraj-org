@@ -12,7 +12,7 @@ import requests
 
 import src.agent_graph
 importlib.reload(src.agent_graph)
-from src.config import CORPUS_DIR, OLLAMA_MODEL, EMBEDDING_MODEL_NAME, OLLAMA_BASE_URL
+from src.config import CORPUS_DIR, OLLAMA_MODEL, EMBEDDING_MODEL_NAME, OLLAMA_BASE_URL, get_chapter_url
 from src.agent_graph import ask_question, reset_retriever
 from src.ingestion import run_ingestion
 from src.hybrid_retriever import HybridRetriever
@@ -275,7 +275,7 @@ with st.sidebar:
     chapters = sorted(list(CORPUS_DIR.glob("*.md")))
     for ch in chapters:
         chapter_name = ch.stem.replace("Chapter_", "Ch. ").replace("_", " ")
-        chapter_url = "https://grkraj.org/pre-university/"
+        chapter_url = get_chapter_url(ch.name)
         st.markdown(
             f'<a class="sidebar-chapter-link" href="{chapter_url}" target="_blank" rel="noopener noreferrer">'
             f'<span>📖 {chapter_name}</span><span class="sidebar-chapter-icon">↗</span></a>',
@@ -326,7 +326,10 @@ def render_citations_ui(citations: list, expanded: bool = False):
                 source_title = c.get("source", "Chapter")
                 section_title = c.get("section", "General")
                 snippet = c.get("snippet", "")
-                url = c.get("url", "https://grkraj.org/pre-university/")
+                raw_src = c.get("raw_source") or source_title
+                url = c.get("url")
+                if not url or url == "https://grkraj.org/pre-university/":
+                    url = get_chapter_url(raw_src)
                 
                 card_html = f"""
                 <div class="citation-card">

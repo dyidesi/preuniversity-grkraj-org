@@ -10,7 +10,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_ollama import ChatOllama
 from langgraph.graph import StateGraph, END
 
-from src.config import OLLAMA_BASE_URL, OLLAMA_MODEL
+from src.config import OLLAMA_BASE_URL, OLLAMA_MODEL, get_chapter_url
 from src.hybrid_retriever import HybridRetriever
 
 import requests
@@ -174,7 +174,7 @@ def generate_node(state: RAGState) -> Dict[str, Any]:
                 "raw_source": raw_src,
                 "section": sec.replace("#", "").strip(),
                 "snippet": cleaned_snippet,
-                "url": "https://grkraj.org/pre-university/"
+                "url": get_chapter_url(raw_src)
             })
 
     system_prompt = """You are the Pre-University Subject Expert Tutor, strictly grounded in the textbook chapters from preuniversity.grkraj.org.
