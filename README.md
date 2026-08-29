@@ -46,26 +46,26 @@ A 100% local, stateful, agentic Retrieval-Augmented Generation (RAG) study assis
 
 ```mermaid
 flowchart TD
-    User([Student / User]) -->|Ask Question / Select Model| UI[Streamlit Dark Chat UI (app.py)]
-    UI --> Graph[LangGraph Agentic Graph (src/agent_graph.py)]
+    User["Student / User"] -->|Ask Question / Select Model| UI["Streamlit Chat UI (app.py)"]
+    UI --> Graph["LangGraph Agent (src/agent_graph.py)"]
     
-    subgraph Knowledge Storage
-        Corpus[12 Chapter Markdown Files] --> Ingest[Ingestion Pipeline (src/ingestion.py)]
-        Ingest --> Chroma[(ChromaDB Vector Store)]
-        Ingest --> BM25[(BM25 Sparse Index)]
-        Chroma --> Hybrid[Hybrid Retriever (src/hybrid_retriever.py)]
+    subgraph Storage ["Knowledge Base Storage"]
+        Corpus["12 Chapter Markdown Files"] --> Ingest["Ingestion Pipeline (src/ingestion.py)"]
+        Ingest --> Chroma["ChromaDB Vector Store"]
+        Ingest --> BM25["BM25 Sparse Index"]
+        Chroma --> Hybrid["Hybrid Retriever (src/hybrid_retriever.py)"]
         BM25 --> Hybrid
     end
 
-    subgraph LangGraph Pipeline
-        Graph --> NodeRetrieve[1. Hybrid Search: BM25 + Dense Chroma]
-        NodeRetrieve --> NodeGrade[2. Grade Document Relevance]
-        NodeGrade -->|Relevant| NodeGenerate[3. Grounded Generator with Selected Model]
-        NodeGrade -->|Irrelevant| NodeRewrite[Query Rewriter & Retry]
+    subgraph Pipeline ["Agentic LangGraph Workflow"]
+        Graph --> NodeRetrieve["1. Hybrid Search: BM25 + Dense Chroma"]
+        NodeRetrieve --> NodeGrade["2. Grade Document Relevance"]
+        NodeGrade -->|Relevant| NodeGenerate["3. Grounded Generator"]
+        NodeGrade -->|Irrelevant| NodeRewrite["Query Rewriter & Retry"]
         NodeRewrite --> NodeRetrieve
-        NodeGenerate --> NodeHallucination[4. Grounding Check]
-        NodeHallucination -->|Grounded| UIOutput[Render Answer + 2-Col Citation Grid]
-        NodeHallucination -->|Ungrounded / No Docs| Refusal[Deterministic Safe Refusal]
+        NodeGenerate --> NodeHallucination["4. Grounding Check"]
+        NodeHallucination -->|Grounded| UIOutput["Render Grounded Answer + Citations"]
+        NodeHallucination -->|Ungrounded / No Docs| Refusal["Deterministic Safe Refusal"]
     end
     
     Refusal --> UIOutput
