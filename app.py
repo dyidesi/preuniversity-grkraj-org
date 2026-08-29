@@ -546,9 +546,9 @@ with tab_chat:
             st.markdown(answer)
             st.caption(f"⏱️ *Generated in {elapsed}s via `{selected_model}` & LangGraph.*")
 
-            # Render Clean Professional Citations
+            # Render Clean Professional Citations (Closed by default)
             if citations:
-                render_citations_ui(citations, expanded=True)
+                render_citations_ui(citations, expanded=False)
 
             # Save in history
             st.session_state.messages.append({
