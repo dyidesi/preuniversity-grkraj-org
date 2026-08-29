@@ -3,11 +3,15 @@ Pre-University Biology AI Tutor - Modern Dark-Themed Conversational RAG UI
 Built with Streamlit, LangChain, LangGraph, ChromaDB & Ollama.
 """
 
+import importlib
 import streamlit as st
 import time
 import json
 from pathlib import Path
 import requests
+
+import src.agent_graph
+importlib.reload(src.agent_graph)
 from src.config import CORPUS_DIR, OLLAMA_MODEL, EMBEDDING_MODEL_NAME, OLLAMA_BASE_URL
 from src.agent_graph import ask_question, reset_retriever
 from src.ingestion import run_ingestion

@@ -288,7 +288,7 @@ def build_rag_graph():
     app = workflow.compile()
     return app
 
-def ask_question(question: str, model: str = None) -> Dict[str, Any]:
+def ask_question(question: str, model: str = None, **kwargs) -> Dict[str, Any]:
     """Helper execution function for the LangGraph application with dynamic model support."""
     graph = build_rag_graph()
     initial_state: RAGState = {
@@ -300,7 +300,7 @@ def ask_question(question: str, model: str = None) -> Dict[str, Any]:
         "is_grounded": False,
         "retry_count": 0,
         "citations": [],
-        "model": model or OLLAMA_MODEL
+        "model": model or kwargs.get("model_name") or OLLAMA_MODEL
     }
     result = graph.invoke(initial_state)
     return result
