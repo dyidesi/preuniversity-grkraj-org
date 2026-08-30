@@ -17,8 +17,10 @@ A 100% local, stateful, agentic Retrieval-Augmented Generation (RAG) study assis
    - Covers the entire Pre-University curriculum: *Plant Anatomy, Cell Structure, Photosynthesis, Water Relations, Mineral Nutrition, Respiration, Phytohormones, Phloem Translocation, Mendelism, Linkage, DNA Structure, and Gene Expression*.
    - Clickable sidebar chapter links opening directly to live lecture notes on `https://grkraj.org/pre-university/` in new browser tabs.
 
-2. **Dynamic Local Model Selector**:
-   - Choose between **Muse Glimmer (`muse-glimmer-30b:latest`)**, **Llama 3.2 (`llama3.2:latest`)**, **Gemma 4 (`gemma4:e4b-it-q8_0`)**, or any locally installed Ollama model directly via the sidebar dropdown.
+2. **Multi-Provider LLM & Instant Demo Mode Engine**:
+   - **Demo / Mock Mode (Zero Setup)**: Instant, sub-second pre-synthesized walkthroughs with citations from all 12 chapters without needing any local Ollama or API keys/credits.
+   - **Ollama (Local)**: Connects to local models (**Llama 3.2**, **Muse Glimmer**, **Gemma 4**, etc.) with custom endpoint configuration.
+   - **Cloud Providers**: Seamless one-click support for **Google Gemini** (`gemini-1.5-flash`, `gemini-2.0-flash`), **OpenAI** (`gpt-4o-mini`, `gpt-4o`), **Anthropic** (`claude-3-5-sonnet`), and **Groq** (`llama-3.3-70b-versatile`).
 
 3. **Hybrid Dense + Sparse Retrieval with Reciprocal Rank Fusion (RRF)**:
    - Dense semantic vector search via **ChromaDB** (`sentence-transformers/all-MiniLM-L6-v2`).
