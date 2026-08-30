@@ -28,16 +28,28 @@ from src.ingestion import run_ingestion
 from src.hybrid_retriever import HybridRetriever
 
 def fetch_local_models():
-    """Robust fetcher for local Ollama models."""
+    """Robust fetcher for local Ollama and cloud LLM models."""
+    import os
+    models = []
     try:
-        res = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=3)
+        res = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=1.5)
         if res.status_code == 200:
             models = [m["name"] for m in res.json().get("models", [])]
-            if models:
-                return models
     except Exception:
         pass
-    return [OLLAMA_MODEL, "llama3.2:latest", "muse-glimmer-30b:latest"]
+
+    groq_key = os.environ.get("GROQ_API_KEY")
+    try:
+        if "GROQ_API_KEY" in st.secrets:
+            groq_key = st.secrets["GROQ_API_KEY"]
+    except Exception:
+        pass
+    if groq_key:
+        models.extend(["groq/llama-3.3-70b-versatile", "groq/llama-3.2-3b-preview"])
+
+    if not models:
+        return [OLLAMA_MODEL, "llama3.2:latest", "muse-glimmer-30b:latest"]
+    return models
 
 # Page Setup
 st.set_page_config(

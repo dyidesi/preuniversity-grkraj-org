@@ -27,11 +27,10 @@ class HybridRetriever:
             collection_name="preuniversity_biology"
         )
         
-        # Load BM25 Index
-        if not BM25_INDEX_FILE.exists():
-            raise FileNotFoundError(
-                f"BM25 index not found at {BM25_INDEX_FILE}. Please run `python -m src.ingestion` first."
-            )
+        # Auto-build index if missing (crucial for zero-config Streamlit Cloud deployment)
+        if not BM25_INDEX_FILE.exists() or not CHROMA_DIR.exists():
+            from src.ingestion import run_ingestion
+            run_ingestion()
         
         with open(BM25_INDEX_FILE, "rb") as f:
             data = pickle.load(f)

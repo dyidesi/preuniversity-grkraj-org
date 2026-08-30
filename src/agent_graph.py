@@ -46,20 +46,77 @@ def reset_retriever():
     global _retriever
     _retriever = None
 
-def list_ollama_models() -> List[str]:
-    """Dynamically fetches all available local models from Ollama."""
+def is_ollama_alive() -> bool:
+    """Checks whether the local/remote Ollama daemon is reachable."""
     try:
-        res = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=3)
+        res = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=1.5)
+        return res.status_code == 200
+    except Exception:
+        return False
+
+def list_ollama_models() -> List[str]:
+    """Dynamically fetches all available models from Ollama and cloud secrets."""
+    import os
+    models = []
+    try:
+        res = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=1.5)
         if res.status_code == 200:
             models = [m["name"] for m in res.json().get("models", [])]
-            if models:
-                return models
-    except Exception as e:
-        print(f"[!] Warning: Could not fetch models from Ollama ({e})")
-    return [OLLAMA_MODEL, "llama3.2:latest", "muse-glimmer-30b:latest"]
+    except Exception:
+        pass
+    
+    groq_key = os.environ.get("GROQ_API_KEY")
+    try:
+        import streamlit as st
+        if "GROQ_API_KEY" in st.secrets:
+            groq_key = st.secrets["GROQ_API_KEY"]
+    except Exception:
+        pass
+        
+    if groq_key:
+        models.extend(["groq/llama-3.3-70b-versatile", "groq/llama-3.2-3b-preview"])
+
+    if not models:
+        return [OLLAMA_MODEL, "llama3.2:latest", "muse-glimmer-30b:latest"]
+    return models
 
 def get_llm(model: str = None, temperature: float = 0.1):
+    import os
     active_model = model if model else OLLAMA_MODEL
+    
+    # 1. Groq Cloud Fallback / Selection (Ideal for Streamlit Cloud)
+    groq_key = os.environ.get("GROQ_API_KEY")
+    try:
+        import streamlit as st
+        if "GROQ_API_KEY" in st.secrets:
+            groq_key = st.secrets["GROQ_API_KEY"]
+    except Exception:
+        pass
+        
+    if "groq" in active_model.lower() or (groq_key and not is_ollama_alive()):
+        try:
+            from langchain_groq import ChatGroq
+            groq_model = "llama-3.3-70b-versatile" if "70b" in active_model else "llama-3.2-3b-preview"
+            return ChatGroq(groq_api_key=groq_key, model_name=groq_model, temperature=temperature)
+        except Exception as e:
+            print(f"[!] Warning: Could not initialize ChatGroq: {e}")
+
+    # 2. OpenAI Cloud Fallback
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    try:
+        import streamlit as st
+        if "OPENAI_API_KEY" in st.secrets:
+            openai_key = st.secrets["OPENAI_API_KEY"]
+    except Exception:
+        pass
+    if "gpt" in active_model.lower() and openai_key:
+        try:
+            from langchain_openai import ChatOpenAI
+            return ChatOpenAI(openai_api_key=openai_key, model_name=active_model, temperature=temperature)
+        except Exception:
+            pass
+
+    # 3. Default to Ollama (Local/Remote)
     return ChatOllama(
         base_url=OLLAMA_BASE_URL,
         model=active_model,
