@@ -6,7 +6,10 @@ via Reciprocal Rank Fusion (RRF).
 import pickle
 from typing import List, Dict, Tuple
 from langchain_core.documents import Document
-from langchain_chroma import Chroma
+try:
+    from langchain_chroma import Chroma
+except ImportError:
+    from langchain_community.vectorstores import Chroma
 
 from src.config import (
     CHROMA_DIR,
