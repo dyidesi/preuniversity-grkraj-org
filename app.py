@@ -1,8 +1,10 @@
 """
 Pre-University Biology AI Tutor - Refined Professional Conversational RAG UI
 Built with Streamlit, LangChain, LangGraph, ChromaDB & Ollama.
+Supports Multi-Provider LLMs: Demo/Mock Mode (Zero Setup), Local Ollama, Google Gemini, OpenAI, Anthropic, and Groq.
 """
 
+import os
 import importlib
 import streamlit as st
 import time
@@ -23,33 +25,14 @@ except ImportError:
     def get_chapter_url(source_name: str) -> str:
         return "https://grkraj.org/pre-university"
 
-from src.agent_graph import ask_question, reset_retriever
+from src.agent_graph import (
+    ask_question,
+    reset_retriever,
+    list_local_ollama_models,
+    is_ollama_alive
+)
 from src.ingestion import run_ingestion
 from src.hybrid_retriever import HybridRetriever
-
-def fetch_local_models():
-    """Robust fetcher for local Ollama and cloud LLM models."""
-    import os
-    models = []
-    try:
-        res = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=1.5)
-        if res.status_code == 200:
-            models = [m["name"] for m in res.json().get("models", [])]
-    except Exception:
-        pass
-
-    groq_key = os.environ.get("GROQ_API_KEY")
-    try:
-        if "GROQ_API_KEY" in st.secrets:
-            groq_key = st.secrets["GROQ_API_KEY"]
-    except Exception:
-        pass
-    if groq_key:
-        models.extend(["groq/llama-3.3-70b-versatile", "groq/llama-3.2-3b-preview"])
-
-    if not models:
-        return [OLLAMA_MODEL, "llama3.2:latest", "muse-glimmer-30b:latest"]
-    return models
 
 # Page Setup
 st.set_page_config(
@@ -69,7 +52,7 @@ st.markdown("""
         color: #E2E8F0;
     }
     
-    /* Global Typography Restraints (Fix oversized/loud headers) */
+    /* Global Typography Restraints */
     .stMarkdown h1, h1 {
         font-size: 1.25rem !important;
         font-weight: 600 !important;
@@ -383,7 +366,7 @@ SAMPLE_QUESTIONS = [
     
     # Category 2: Photosynthesis & Water
     ("☀️ Calvin Cycle (C3)", "Explain the three main phases of the Calvin Cycle (C3 pathway) in photosynthesis."),
-    ("🌾 Hatch-Slack C4 & Kranz", "How does Kranz anatomy in C4 plants optimize photosynthetic efficiency and prevent photorespiration?"),
+    ("🌾 Hatch-Slack C4", "How does Kranz anatomy in C4 plants optimize photosynthetic efficiency and prevent photorespiration?"),
     ("⚡ Z-Scheme & Photolysis", "Explain the Z-scheme of light reactions and the photolysis of water in Photosystem II."),
     ("💧 Cohesion-Tension Pull", "Explain the Cohesion-Tension-Transpiration Pull Theory for water movement in xylem."),
     ("🛑 Casparian Strip", "What is the Casparian strip and how does it regulate apoplastic vs symplastic root transport?"),
@@ -400,7 +383,7 @@ SAMPLE_QUESTIONS = [
     ("🪰 Linkage & Crossing Over", "How did Thomas Hunt Morgan's experiments on Drosophila prove linkage and crossing over?"),
     ("🧪 B-DNA Double Helix", "Explain the structural features of the Watson-Crick B-DNA double helix model."),
     ("⚙️ Translation on Ribosome", "Explain the stages of protein translation on ribosomes and the role of tRNA."),
-    ("🌸 Photoperiodism & Phytochrome", "Explain the physiological mechanism of photoperiodism and the role of phytochrome in flowering.")
+    ("🌸 Photoperiodism", "Explain the physiological mechanism of photoperiodism and the role of phytochrome in flowering.")
 ]
 
 # Initialize Session State
@@ -416,7 +399,8 @@ if "turns" not in st.session_state:
             ),
             "citations": [],
             "latency": None,
-            "model": None
+            "provider": "Mock Mode",
+            "model": "Instant"
         }
     ]
 
@@ -426,31 +410,84 @@ if "queued_query" not in st.session_state:
 # Sidebar Content
 with st.sidebar:
     st.markdown("### 🌿 Biology Tutor Studio")
-    st.caption("100% Local Agentic RAG • LangChain & LangGraph")
+    st.caption("Local & Cloud Agentic RAG • LangChain & LangGraph")
     
     st.divider()
-    st.markdown("#### ⚙️ Pipeline & Model")
+    st.markdown("#### ⚙️ Model Configuration")
     
-    available_models = fetch_local_models()
-    default_idx = 0
-    if OLLAMA_MODEL in available_models:
-        default_idx = available_models.index(OLLAMA_MODEL)
-    elif "muse-glimmer-30b:latest" in available_models:
-        default_idx = available_models.index("muse-glimmer-30b:latest")
-        
-    selected_model = st.selectbox(
-        "Active Ollama Model:",
-        options=available_models,
-        index=default_idx,
-        help="Choose which locally installed Ollama model to use"
+    # 1. LLM Provider Selector (Matching user specification)
+    provider_options = [
+        "Ollama (Local)",
+        "Demo / Mock Mode (Zero Setup)",
+        "Google Gemini",
+        "OpenAI",
+        "Anthropic",
+        "Groq (Cloud Llama)"
+    ]
+    
+    # Default selection logic: if on cloud and no Ollama, default to Demo/Mock Mode
+    default_provider_idx = 0 if is_ollama_alive() else 1
+    selected_provider_label = st.selectbox(
+        "LLM Provider",
+        options=provider_options,
+        index=default_provider_idx,
+        help="Select which AI inference engine or mode to power your biology tutor"
     )
     
+    # Provider-Specific Parameters
+    selected_model_name = "llama3.2:latest"
+    user_api_key = None
+    custom_base_url = OLLAMA_BASE_URL
+    provider_key = "ollama"
+    
+    if selected_provider_label == "Demo / Mock Mode (Zero Setup)":
+        provider_key = "mock"
+        selected_model_name = "Demo Knowledge Synthesizer"
+        st.info("⚡ **Instant Mode Active**: Pre-synthesized authoritative walkthroughs from the 12 chapters. Zero API keys or credits required!")
+
+    elif selected_provider_label == "Ollama (Local)":
+        provider_key = "ollama"
+        custom_base_url = st.text_input("Ollama Base URL:", value=OLLAMA_BASE_URL)
+        local_models = list_local_ollama_models(base_url=custom_base_url)
+        default_m_idx = local_models.index(OLLAMA_MODEL) if OLLAMA_MODEL in local_models else 0
+        selected_model_name = st.selectbox("Ollama Model:", options=local_models, index=default_m_idx)
+        if not is_ollama_alive(custom_base_url):
+            st.warning("⚠️ Local Ollama is not detected at this URL. Make sure Ollama is running or switch to **Demo / Mock Mode**.")
+
+    elif selected_provider_label == "Google Gemini":
+        provider_key = "google"
+        gemini_models = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]
+        selected_model_name = st.selectbox("Gemini Model:", options=gemini_models, index=0)
+        default_gemini_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY", "")
+        user_api_key = st.text_input("Gemini API Key:", value=default_gemini_key, type="password", help="Enter your Google AI Studio API key")
+
+    elif selected_provider_label == "OpenAI":
+        provider_key = "openai"
+        openai_models = ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo"]
+        selected_model_name = st.selectbox("OpenAI Model:", options=openai_models, index=0)
+        default_openai_key = st.secrets.get("OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
+        user_api_key = st.text_input("OpenAI API Key:", value=default_openai_key, type="password", help="Enter your OpenAI API key")
+
+    elif selected_provider_label == "Anthropic":
+        provider_key = "anthropic"
+        anthropic_models = ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022"]
+        selected_model_name = st.selectbox("Claude Model:", options=anthropic_models, index=0)
+        default_anthropic_key = st.secrets.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY", "")
+        user_api_key = st.text_input("Anthropic API Key:", value=default_anthropic_key, type="password", help="Enter your Anthropic API key")
+
+    elif selected_provider_label == "Groq (Cloud Llama)":
+        provider_key = "groq"
+        groq_models = ["llama-3.3-70b-versatile", "llama-3.2-3b-preview", "mixtral-8x7b-32768"]
+        selected_model_name = st.selectbox("Groq Model:", options=groq_models, index=0)
+        default_groq_key = st.secrets.get("GROQ_API_KEY") or os.environ.get("GROQ_API_KEY", "")
+        user_api_key = st.text_input("Groq API Key:", value=default_groq_key, type="password", help="Enter your Groq API key")
+
     # Clean Metric Grid
     st.markdown(f"""
     <div class="sidebar-metric-grid">
         <div class="metric-card">
-            <div class="metric-label">Model</div>
-            <div class="metric-val">{selected_model.split(':')[0]}</div>
+            <div class="metric-label">Provider</div>
+            <div class="metric-val">{selected_provider_label.split(' ')[0]}</div>
         </div>
         <div class="metric-card">
             <div class="metric-label">Status</div>
@@ -500,7 +537,8 @@ with st.sidebar:
                     "answer": "Conversation cleared. How can I assist you with your pre-university biology studies?",
                     "citations": [],
                     "latency": None,
-                    "model": None
+                    "provider": selected_provider_label,
+                    "model": selected_model_name
                 }
             ]
             st.rerun()
@@ -554,7 +592,7 @@ st.markdown("""
         <span>🌿 Pre-University Biology AI Tutor</span>
     </div>
     <div class="hero-subtitle">
-        Local conversational assistant grounded in all 12 curriculum chapters from <b>preuniversity.grkraj.org</b>
+        Local & Cloud conversational assistant grounded in all 12 curriculum chapters from <b>preuniversity.grkraj.org</b>
     </div>
     <div>
         <span class="badge-pill accent">⚡ LangGraph State Machine</span>
@@ -704,14 +742,20 @@ with tab_chat:
 
         # Generate Assistant Response
         with st.chat_message("assistant", avatar="🌿"):
-            status_container = st.status("Analyzing textbook chapters with LangGraph...", expanded=True)
+            status_container = st.status(f"Analyzing textbook chapters via {selected_provider_label}...", expanded=True)
             
             with status_container:
                 st.write("🔍 Running Hybrid Retrieval (Dense Chroma + Sparse BM25)...")
                 start_time = time.time()
                 
                 st.write("⚖️ Grading document relevance and checking context coverage...")
-                result = ask_question(active_query, model=selected_model)
+                result = ask_question(
+                    active_query,
+                    provider=provider_key,
+                    model=selected_model_name,
+                    api_key=user_api_key,
+                    base_url=custom_base_url
+                )
                 elapsed = round(time.time() - start_time, 2)
                 
                 st.write("✍️ Synthesizing grounded explanation with citations...")
@@ -721,7 +765,7 @@ with tab_chat:
             citations = result.get("citations", [])
 
             st.markdown(answer)
-            st.caption(f"⏱️ Generated in {elapsed}s via `{selected_model}` • LangGraph")
+            st.caption(f"⏱️ Generated in {elapsed}s via `{selected_provider_label} ({selected_model_name.split(':')[0]})` • LangGraph")
 
             if citations:
                 render_citations_ui(citations, expanded=False)
@@ -732,7 +776,8 @@ with tab_chat:
             "answer": answer,
             "citations": citations,
             "latency": elapsed,
-            "model": selected_model
+            "provider": selected_provider_label,
+            "model": selected_model_name
         })
         st.rerun()
 
@@ -745,8 +790,9 @@ with tab_chat:
         with st.chat_message("assistant", avatar="🌿"):
             st.markdown(turn["answer"])
             if turn.get("latency"):
-                model_used = turn.get("model") or selected_model
-                st.caption(f"⏱️ Generated in {turn['latency']}s via `{model_used}` • LangGraph")
+                prov_tag = turn.get("provider") or selected_provider_label
+                mod_tag = turn.get("model") or selected_model_name
+                st.caption(f"⏱️ Generated in {turn['latency']}s via `{prov_tag} ({mod_tag.split(':')[0]})` • LangGraph")
             if turn.get("citations"):
                 render_citations_ui(turn["citations"], expanded=False)
 
